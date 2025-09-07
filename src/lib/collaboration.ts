@@ -68,7 +68,7 @@ export class CollaborationManager {
 
   // Resolve conflicts using operational transformation
   private resolveConflicts(newAction: DrawingAction, conflicts: DrawingAction[]): DrawingAction {
-    let resolvedAction = { ...newAction };
+    const resolvedAction = { ...newAction };
 
     for (const conflict of conflicts) {
       // Apply transformation based on conflict type

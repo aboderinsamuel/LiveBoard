@@ -71,9 +71,9 @@ export class PerformanceMonitor {
 
   getAllMetrics(): Record<string, any> {
     const result: Record<string, any> = {};
-    for (const [name] of this.metrics) {
+    this.metrics.forEach((_, name) => {
       result[name] = this.getMetricStats(name);
-    }
+    });
     return result;
   }
 
@@ -235,7 +235,7 @@ export class ImageOptimizer {
     maxHeight: number = 1080,
     quality: number = 0.8
   ): Promise<Blob> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
@@ -255,7 +255,13 @@ export class ImageOptimizer {
 
         // Draw and compress
         ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to compress image'));
+          }
+        }, 'image/jpeg', quality);
       };
 
       img.src = URL.createObjectURL(file);

@@ -44,7 +44,6 @@ export class ErrorHandler {
         type: ErrorType.RUNTIME_ERROR,
         message: `Unhandled promise rejection: ${event.reason}`,
         details: event.reason,
-        timestamp: Date.now(),
       });
     });
 
@@ -59,7 +58,6 @@ export class ErrorHandler {
           colno: event.colno,
           error: event.error,
         },
-        timestamp: Date.now(),
       });
     });
   }
@@ -194,7 +192,6 @@ export function withErrorBoundary<T extends object>(
           stack: error.stack,
           componentStack: errorInfo.componentStack,
         },
-        timestamp: Date.now(),
       });
     }
 
@@ -269,7 +266,6 @@ export function safeAsync<T extends any[], R>(
         type: ErrorType.RUNTIME_ERROR,
         message: `Async function error: ${(error as Error).message}`,
         details: { args, error },
-        timestamp: Date.now(),
       });
       return null;
     }

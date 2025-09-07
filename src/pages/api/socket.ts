@@ -1,22 +1,37 @@
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Server as NetServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { DrawingAction, Collaborator, WhiteboardState } from '@/types/whiteboard';
+
+// Extend the Server type to allow attaching io
+import type { Server as HTTPServer } from 'http';
+import type { Socket as NetSocket } from 'net';
+
+type NextApiResponseWithSocketIO = NextApiResponse & {
+  socket: NetSocket & {
+    server: HTTPServer & {
+      io?: SocketIOServer;
+    };
+  };
+};
 
 // In-memory storage for demo purposes
 // In production, you'd use Redis or a database
 const whiteboardStates = new Map<string, WhiteboardState>();
 const activeUsers = new Map<string, Map<string, Collaborator>>();
 
+
 export default function SocketHandler(req: NextApiRequest, res: NextApiResponse) {
-  if (res.socket.server.io) {
+  const resWithIO = res as NextApiResponseWithSocketIO;
+  if (resWithIO.socket?.server?.io) {
     console.log('Socket is already running');
     res.end();
     return;
   }
 
   console.log('Socket is initializing');
-  const io = new SocketIOServer(res.socket.server as NetServer, {
+  const io = new SocketIOServer(resWithIO.socket.server as NetServer, {
     path: '/api/socket',
     addTrailingSlash: false,
     cors: {
@@ -156,7 +171,7 @@ export default function SocketHandler(req: NextApiRequest, res: NextApiResponse)
       // Clean up user from all rooms
       const { userId } = socket.handshake.auth;
       if (userId) {
-        for (const [whiteboardId, roomUsers] of activeUsers.entries()) {
+  for (const [whiteboardId, roomUsers] of Array.from(activeUsers.entries())) {
           if (roomUsers.has(userId)) {
             roomUsers.delete(userId);
             
@@ -172,6 +187,6 @@ export default function SocketHandler(req: NextApiRequest, res: NextApiResponse)
     });
   });
 
-  res.socket.server.io = io;
+  resWithIO.socket.server.io = io;
   res.end();
 }
